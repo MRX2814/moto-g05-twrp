@@ -1,0 +1,18 @@
+name: Validate lamul TWRP tree
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required device files
+        run: |
+          test -f twrp/device/motorola/lamul/BoardConfig.mk
+          test -f twrp/device/motorola/lamul/recovery.fstab
+          test -f twrp/device/motorola/lamul/twrp_lamul.mk
+          grep -q 'BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE' twrp/device/motorola/lamul/BoardConfig.mk
+          grep -q '/data' twrp/device/motorola/lamul/recovery.fstab

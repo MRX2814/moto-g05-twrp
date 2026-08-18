@@ -1,0 +1,5 @@
+stock/
+*.img
+*.tar.gz
+out/
+vendor/
