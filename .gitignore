@@ -1,5 +1,6 @@
 stock/
 *.img
+!twrp/device/motorola/lamul/prebuilt/dtb.img
 *.tar.gz
 out/
 vendor/

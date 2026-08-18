@@ -14,5 +14,9 @@ jobs:
           test -f twrp/device/motorola/lamul/BoardConfig.mk
           test -f twrp/device/motorola/lamul/recovery.fstab
           test -f twrp/device/motorola/lamul/twrp_lamul.mk
+          test -f twrp/device/motorola/lamul/prebuilt/Image.gz
+          test -f twrp/device/motorola/lamul/prebuilt/dtb.img
+          test -f twrp/device/motorola/lamul/prebuilt/vendor_ramdisk00.lz4
           grep -q 'BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE' twrp/device/motorola/lamul/BoardConfig.mk
+          grep -q 'BOARD_INCLUDE_RECOVERY_RAMDISK_IN_VENDOR_BOOT := true' twrp/device/motorola/mt6768-common/BoardConfigCommon.mk
           grep -q '/data' twrp/device/motorola/lamul/recovery.fstab

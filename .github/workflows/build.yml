@@ -1,0 +1,67 @@
+name: Build TWRP vendor_boot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+
+    steps:
+      - name: Check out lamul tree
+        uses: actions/checkout@v4
+        with:
+          path: lamul-tree
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          df -h /
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+          mkdir -p "$HOME/bin"
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
+          chmod +x "$HOME/bin/repo"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Sync TWRP 14.1 sources
+        run: |
+          mkdir twrp-src
+          cd twrp-src
+          repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-14.1
+          repo sync -c --force-sync --no-clone-bundle --no-tags -j4
+
+      - name: Install Moto G05 device trees
+        run: |
+          mkdir -p twrp-src/device/motorola
+          cp -a lamul-tree/twrp/device/motorola/lamul twrp-src/device/motorola/
+          cp -a lamul-tree/twrp/device/motorola/mt6768-common twrp-src/device/motorola/
+
+      - name: Build vendor_boot image
+        run: |
+          cd twrp-src
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export USE_CCACHE=1
+          ccache -M 5G
+          source build/envsetup.sh
+          lunch twrp_lamul-eng
+          mka vendorbootimage
+
+      - name: Verify output
+        run: |
+          test -f twrp-src/out/target/product/lamul/vendor_boot.img
+          stat -c '%s bytes' twrp-src/out/target/product/lamul/vendor_boot.img
+          sha256sum twrp-src/out/target/product/lamul/vendor_boot.img | tee vendor_boot.sha256
+
+      - name: Upload test image
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-lamul-vendor_boot-${{ github.run_number }}
+          path: |
+            twrp-src/out/target/product/lamul/vendor_boot.img
+            vendor_boot.sha256
+          if-no-files-found: error
