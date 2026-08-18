@@ -22,7 +22,14 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+          sudo apt-get install -y \
+            bc bison build-essential ccache curl flex \
+            g++-multilib gcc-multilib git git-lfs gnupg gperf \
+            imagemagick lib32readline-dev lib32z1-dev libelf-dev \
+            lz4 libncurses-dev libssl-dev libxml2 libxml2-utils \
+            lzop pngcrush rsync schedtool squashfs-tools xsltproc \
+            zip zlib1g-dev
+
           mkdir -p "$HOME/bin"
           curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
           chmod +x "$HOME/bin/repo"
@@ -30,16 +37,20 @@ jobs:
 
       - name: Sync TWRP 14.1 sources
         run: |
-          mkdir twrp-src
+          mkdir -p twrp-src
           cd twrp-src
-          repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-14.1
-          repo sync -c --force-sync --no-clone-bundle --no-tags -j4
+          repo init --depth=1 \
+            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+            -b twrp-14.1
+          repo sync -c --force-sync --no-clone-bundle --no-tags -j8
 
       - name: Install Moto G05 device trees
         run: |
           mkdir -p twrp-src/device/motorola
-          cp -a lamul-tree/twrp/device/motorola/lamul twrp-src/device/motorola/
-          cp -a lamul-tree/twrp/device/motorola/mt6768-common twrp-src/device/motorola/
+          cp -a lamul-tree/twrp/device/motorola/lamul \
+            twrp-src/device/motorola/
+          cp -a lamul-tree/twrp/device/motorola/mt6768-common \
+            twrp-src/device/motorola/
 
       - name: Build vendor_boot image
         run: |
@@ -54,8 +65,11 @@ jobs:
       - name: Verify output
         run: |
           test -f twrp-src/out/target/product/lamul/vendor_boot.img
-          stat -c '%s bytes' twrp-src/out/target/product/lamul/vendor_boot.img
-          sha256sum twrp-src/out/target/product/lamul/vendor_boot.img | tee vendor_boot.sha256
+          stat -c '%s bytes' \
+            twrp-src/out/target/product/lamul/vendor_boot.img
+          sha256sum \
+            twrp-src/out/target/product/lamul/vendor_boot.img \
+            | tee vendor_boot.sha256
 
       - name: Upload test image
         uses: actions/upload-artifact@v4
